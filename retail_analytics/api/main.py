@@ -14,9 +14,12 @@ Endpoints:
     GET /health - Health check
 """
 
-import sys
 import os
 from pathlib import Path
+import sys
+
+# Workaround for imports - ideally install package with: pip install -e .
+# This allows running without proper installation for development
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
@@ -133,9 +136,12 @@ async def generate_forecast(
             "model_info": forecaster.get_model_info()
         }
 
+    except ValueError as e:
+        logger.error(f"Forecast validation error: {e}")
+        raise HTTPException(status_code=400, detail="Invalid input data or parameters")
     except Exception as e:
-        logger.error(f"Forecast error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unexpected error during forecast")
+        raise HTTPException(status_code=500, detail="An error occurred while processing forecast")
 
 
 @app.post("/segment")
@@ -197,9 +203,12 @@ async def segment_customers(
             "recommendations": recommendations
         }
 
+    except ValueError as e:
+        logger.error(f"Segmentation validation error: {e}")
+        raise HTTPException(status_code=400, detail="Invalid input data or parameters")
     except Exception as e:
-        logger.error(f"Segmentation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unexpected error during segmentation")
+        raise HTTPException(status_code=500, detail="An error occurred while processing segmentation")
 
 
 @app.post("/detect-fraud")
@@ -273,9 +282,12 @@ async def detect_fraud(
             "recommendations": detector.get_recommendations(flagged)
         }
 
+    except ValueError as e:
+        logger.error(f"Fraud detection validation error: {e}")
+        raise HTTPException(status_code=400, detail="Invalid input data or parameters")
     except Exception as e:
-        logger.error(f"Fraud detection error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unexpected error during fraud detection")
+        raise HTTPException(status_code=500, detail="An error occurred while processing fraud detection")
 
 
 if __name__ == "__main__":

@@ -15,14 +15,12 @@ Usage:
 
 import pandas as pd
 import numpy as np
-from typing import Optional, List, Dict, Union, Tuple, Any
+from typing import Optional, List, Dict, Any
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.impute import SimpleImputer, KNNImputer
 from scipy import stats
 from loguru import logger
 import warnings
-
-warnings.filterwarnings('ignore')
 
 
 class Preprocessor:
@@ -376,8 +374,12 @@ class Preprocessor:
         # Fill missing values
         if fill_method == 'interpolate':
             df = df.interpolate(method='time')
+        elif fill_method == 'ffill':
+            df = df.ffill()
+        elif fill_method == 'bfill':
+            df = df.bfill()
         else:
-            df = df.fillna(method=fill_method)
+            raise ValueError(f"Unsupported fill_method: {fill_method}. Use 'interpolate', 'ffill', or 'bfill'.")
 
         # Fill any remaining NaN with 0
         df = df.fillna(0)

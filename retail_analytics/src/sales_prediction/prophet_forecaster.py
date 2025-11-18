@@ -91,6 +91,8 @@ class ProphetForecaster:
         self.forecast = None
         self.date_column = None
         self.value_column = None
+        self.custom_seasonalities = []  # Store custom seasonalities to preserve across fit() calls
+        self.custom_regressors = []  # Store custom regressors
 
         logger.info("ProphetForecaster initialized")
 
@@ -168,8 +170,14 @@ class ProphetForecaster:
             prophet_params["holidays"] = holidays
         self.model = Prophet(**prophet_params)
 
+        # Re-add any custom seasonalities that were previously configured
+        for seasonality_config in self.custom_seasonalities:
+            self.model.add_seasonality(**seasonality_config)
+            logger.info(f"Re-added custom seasonality: {seasonality_config['name']}")
+
         # Add regressors
         if regressors:
+            self.custom_regressors = regressors  # Store for later
             for regressor in regressors:
                 self.model.add_regressor(regressor)
                 prophet_df[regressor] = df[regressor].values
@@ -332,7 +340,13 @@ class ProphetForecaster:
         if mode is not None:
             kwargs['mode'] = mode
 
-        self.model.add_seasonality(**kwargs)
+        # Store custom seasonality configuration
+        self.custom_seasonalities.append(kwargs)
+        
+        # Add to model if it exists
+        if self.model is not None:
+            self.model.add_seasonality(**kwargs)
+        
         logger.info(f"Added custom seasonality: {name} (period={period})")
 
         return self
@@ -517,20 +531,48 @@ class ProphetForecaster:
     def save_model(self, path: str) -> None:
         """
         Save fitted model to disk.
+        
+        WARNING: Pickle files can execute arbitrary code during unpickling.
+        Only load models from trusted sources.
 
         Args:
             path: Path to save model
         """
         import pickle
 
+        # Save model and state
+        model_state = {
+            'model': self.model,
+            'train_data': self.train_data,
+            'forecast': self.forecast,
+            'date_column': self.date_column,
+            'value_column': self.value_column,
+            'custom_seasonalities': self.custom_seasonalities,
+            'custom_regressors': self.custom_regressors,
+            'config': {
+                'growth': self.growth,
+                'seasonality_mode': self.seasonality_mode,
+                'yearly_seasonality': self.yearly_seasonality,
+                'weekly_seasonality': self.weekly_seasonality,
+                'daily_seasonality': self.daily_seasonality,
+                'changepoint_prior_scale': self.changepoint_prior_scale,
+                'seasonality_prior_scale': self.seasonality_prior_scale,
+                'holidays_prior_scale': self.holidays_prior_scale,
+                'interval_width': self.interval_width
+            }
+        }
+
         with open(path, 'wb') as f:
-            pickle.dump(self.model, f)
+            pickle.dump(model_state, f)
 
         logger.info(f"Model saved to {path}")
 
     def load_model(self, path: str) -> 'ProphetForecaster':
         """
         Load model from disk.
+        
+        WARNING: Pickle files can execute arbitrary code during unpickling.
+        Only load models from trusted sources. Validate the file path before loading.
 
         Args:
             path: Path to load model from
@@ -539,9 +581,44 @@ class ProphetForecaster:
             Self for method chaining
         """
         import pickle
+        from pathlib import Path
+        
+        # Basic path validation
+        model_path = Path(path)
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model file not found: {path}")
+        if not model_path.is_file():
+            raise ValueError(f"Path is not a file: {path}")
 
         with open(path, 'rb') as f:
-            self.model = pickle.load(f)
+            model_state = pickle.load(f)
+
+        # Restore state
+        if isinstance(model_state, dict):
+            # New format with full state
+            self.model = model_state.get('model')
+            self.train_data = model_state.get('train_data')
+            self.forecast = model_state.get('forecast')
+            self.date_column = model_state.get('date_column')
+            self.value_column = model_state.get('value_column')
+            self.custom_seasonalities = model_state.get('custom_seasonalities', [])
+            self.custom_regressors = model_state.get('custom_regressors', [])
+            
+            # Restore config
+            config = model_state.get('config', {})
+            self.growth = config.get('growth', self.growth)
+            self.seasonality_mode = config.get('seasonality_mode', self.seasonality_mode)
+            self.yearly_seasonality = config.get('yearly_seasonality', self.yearly_seasonality)
+            self.weekly_seasonality = config.get('weekly_seasonality', self.weekly_seasonality)
+            self.daily_seasonality = config.get('daily_seasonality', self.daily_seasonality)
+            self.changepoint_prior_scale = config.get('changepoint_prior_scale', self.changepoint_prior_scale)
+            self.seasonality_prior_scale = config.get('seasonality_prior_scale', self.seasonality_prior_scale)
+            self.holidays_prior_scale = config.get('holidays_prior_scale', self.holidays_prior_scale)
+            self.interval_width = config.get('interval_width', self.interval_width)
+        else:
+            # Old format with just model
+            self.model = model_state
+            logger.warning("Loaded model in legacy format. Some state may not be restored.")
 
         logger.info(f"Model loaded from {path}")
         return self
