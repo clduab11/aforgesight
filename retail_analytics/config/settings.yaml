@@ -17,6 +17,15 @@ data:
   missing_value_threshold: 0.3  # Max allowed missing ratio
   outlier_zscore_threshold: 3.0
   min_data_points: 30
+  
+  # Column name mappings for different data sources
+  column_names:
+    transaction_id: "transaction_id"
+    customer_id: "customer_id"
+    amount: "amount"
+    timestamp: "timestamp"
+    date: "date"
+    sales: "sales"
 
 sales_prediction:
   # ARIMA Configuration
