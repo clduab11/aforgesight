@@ -27,8 +27,8 @@ COPY . .
 # Create output directories
 RUN mkdir -p /app/outputs/plots /app/outputs/reports
 
-# Generate sample data
-RUN python data/generate_sample_data.py
+# Note: Sample data generation removed from production image
+# To generate sample data, run: python data/generate_sample_data.py
 
 # Expose port for API
 EXPOSE 8000

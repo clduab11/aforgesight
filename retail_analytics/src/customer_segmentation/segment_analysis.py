@@ -14,7 +14,7 @@ Usage:
 
 import pandas as pd
 import numpy as np
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, List, Dict, Any
 from scipy import stats
 from loguru import logger
 import warnings
@@ -176,9 +176,6 @@ class SegmentAnalyzer:
         """Calculate feature importance for segment differentiation."""
         importance_scores = []
 
-        overall_means = df[value_columns].mean()
-        overall_stds = df[value_columns].std()
-
         for col in value_columns:
             if col not in df.columns:
                 continue
@@ -287,9 +284,6 @@ class SegmentAnalyzer:
             merged[f'{segment_column}_after'],
             margins=True
         )
-
-        # Calculate percentages
-        migration_pct = migration.div(migration.iloc[:-1, -1], axis=0) * 100
 
         logger.info(f"Analyzed migration for {len(merged)} customers")
         return migration

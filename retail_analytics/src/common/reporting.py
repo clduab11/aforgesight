@@ -16,7 +16,7 @@ Usage:
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Optional, List, Dict, Any, Union
+from typing import List, Dict, Any
 from datetime import datetime
 import json
 from loguru import logger

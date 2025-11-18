@@ -14,7 +14,7 @@ Usage:
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple
 from sklearn.metrics import (
     confusion_matrix, classification_report,
     precision_score, recall_score, f1_score,
@@ -285,12 +285,10 @@ class FraudEvaluator:
         tp = ((y_true == 1) & (y_pred == 1))
         fp = ((y_true == 0) & (y_pred == 1))
         fn = ((y_true == 1) & (y_pred == 0))
-        tn = ((y_true == 0) & (y_pred == 0))
 
         # Amounts
         caught_fraud_amount = amounts[tp].sum()
         missed_fraud_amount = amounts[fn].sum()
-        false_alarm_amount = amounts[fp].sum()
         total_fraud_amount = amounts[y_true == 1].sum()
 
         # Costs

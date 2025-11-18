@@ -18,8 +18,7 @@ import numpy as np
 from typing import Optional, Dict, Tuple, Any, List
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from statsmodels.tsa.stattools import adfuller, acf, pacf
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from statsmodels.tsa.stattools import adfuller
 import matplotlib.pyplot as plt
 from loguru import logger
 import warnings
@@ -393,7 +392,7 @@ class ARIMAForecaster:
         if self.fitted_model is None:
             raise ValueError("Model not fitted. Call fit() first.")
 
-        fig = self.fitted_model.plot_diagnostics(figsize=(14, 10))
+        self.fitted_model.plot_diagnostics(figsize=(14, 10))
 
         if save_path:
             plt.savefig(save_path, dpi=100, bbox_inches='tight')

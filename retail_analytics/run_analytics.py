@@ -24,7 +24,6 @@ Examples:
 
 import argparse
 import sys
-import os
 from pathlib import Path
 import yaml
 from loguru import logger
@@ -34,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from src.common import DataLoader, Preprocessor, Visualizer, Reporter
 from src.sales_prediction import ARIMAForecaster, ProphetForecaster, ForecastEvaluator
-from src.customer_segmentation import RFMFeatureEngineer, KMeansSegmenter, SegmentAnalyzer
+from src.customer_segmentation import RFMFeatureEngineer, KMeansSegmenter
 from src.fraud_detection import FraudFeatureEngineer, IsolationForestDetector, FraudEvaluator
 
 

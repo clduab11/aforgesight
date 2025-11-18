@@ -16,7 +16,7 @@ Usage:
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Optional, List, Dict, Union, Tuple, Any
+from typing import Optional, List, Dict, Tuple, Any
 import matplotlib.pyplot as plt
 import seaborn as sns
 from loguru import logger
@@ -357,9 +357,9 @@ class Visualizer:
             save_name: Filename for saving
         """
         if silhouettes:
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+            (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))[1]
         else:
-            fig, ax1 = plt.subplots(figsize=self.figsize)
+            ax1 = plt.subplots(figsize=self.figsize)[1]
 
         # Inertia plot
         ax1.plot(k_range, inertias, 'bo-', linewidth=2, markersize=8)
@@ -688,11 +688,9 @@ class Visualizer:
         )
 
         for i, plot_config in enumerate(plots):
-            row = i // 2 + 1
-            col = i % 2 + 1
-
             # Add traces based on plot type
             # This is simplified - extend as needed
+            pass  # Placeholder for future implementation
 
         fig.update_layout(
             title=title,

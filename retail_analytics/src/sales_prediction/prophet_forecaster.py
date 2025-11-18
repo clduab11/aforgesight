@@ -14,8 +14,7 @@ Usage:
 """
 
 import pandas as pd
-import numpy as np
-from typing import Optional, Dict, List, Any, Tuple
+from typing import Optional, Dict, List, Any
 from loguru import logger
 import warnings
 
