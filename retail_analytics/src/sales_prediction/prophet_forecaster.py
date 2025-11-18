@@ -153,32 +153,20 @@ class ProphetForecaster:
         self.train_data = prophet_df
 
         # Initialize Prophet model
-        self.model = Prophet(
-            growth=self.growth,
-            seasonality_mode=self.seasonality_mode,
-            yearly_seasonality=self.yearly_seasonality,
-            weekly_seasonality=self.weekly_seasonality,
-            daily_seasonality=self.daily_seasonality,
-            changepoint_prior_scale=self.changepoint_prior_scale,
-            seasonality_prior_scale=self.seasonality_prior_scale,
-            holidays_prior_scale=self.holidays_prior_scale,
-            interval_width=self.interval_width
-        )
-
-        # Add holidays
+        prophet_params = {
+            "growth": self.growth,
+            "seasonality_mode": self.seasonality_mode,
+            "yearly_seasonality": self.yearly_seasonality,
+            "weekly_seasonality": self.weekly_seasonality,
+            "daily_seasonality": self.daily_seasonality,
+            "changepoint_prior_scale": self.changepoint_prior_scale,
+            "seasonality_prior_scale": self.seasonality_prior_scale,
+            "holidays_prior_scale": self.holidays_prior_scale,
+            "interval_width": self.interval_width
+        }
         if holidays is not None:
-            self.model = Prophet(
-                growth=self.growth,
-                seasonality_mode=self.seasonality_mode,
-                yearly_seasonality=self.yearly_seasonality,
-                weekly_seasonality=self.weekly_seasonality,
-                daily_seasonality=self.daily_seasonality,
-                changepoint_prior_scale=self.changepoint_prior_scale,
-                seasonality_prior_scale=self.seasonality_prior_scale,
-                holidays_prior_scale=self.holidays_prior_scale,
-                interval_width=self.interval_width,
-                holidays=holidays
-            )
+            prophet_params["holidays"] = holidays
+        self.model = Prophet(**prophet_params)
 
         # Add regressors
         if regressors:
