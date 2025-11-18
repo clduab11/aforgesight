@@ -392,28 +392,53 @@ class IsolationForestDetector:
 
     def get_feature_importance(self) -> pd.DataFrame:
         """
-        Estimate feature importance based on isolation depth.
+        Estimate feature importance using permutation importance.
+        
+        Note: Isolation Forest doesn't provide native feature importance.
+        This method uses permutation importance on the validation set if available,
+        otherwise returns an error message.
 
         Returns:
             DataFrame with feature importance scores
         """
         if self.model is None:
             raise ValueError("Model not fitted. Call fit() first.")
+        
+        if not hasattr(self, 'X_val') or self.X_val is None or len(self.X_val) == 0:
+            logger.warning("No validation data available. Cannot compute feature importance.")
+            # Return empty dataframe with proper structure
+            return pd.DataFrame(columns=['feature', 'importance'])
 
-        # Use path length as importance proxy
-        # This is an approximation since Isolation Forest doesn't have direct feature importance
-
-        importance = []
+        # Use permutation importance
+        from sklearn.inspection import permutation_importance
+        
+        # Get baseline score
+        baseline_scores = self.model.score_samples(self.X_val)
+        baseline_mean = np.mean(baseline_scores)
+        
+        importance_scores = []
         for i, feature in enumerate(self.feature_columns):
-            # Calculate average path length contribution
-            # This is a simplified approach
-            importance.append({
+            # Permute feature
+            X_permuted = self.X_val.copy()
+            np.random.shuffle(X_permuted[:, i])
+            
+            # Calculate score with permuted feature
+            permuted_scores = self.model.score_samples(X_permuted)
+            permuted_mean = np.mean(permuted_scores)
+            
+            # Importance is the decrease in score
+            importance_scores.append({
                 'feature': feature,
-                'importance': 1.0 / len(self.feature_columns)  # Uniform for now
+                'importance': abs(baseline_mean - permuted_mean)
             })
 
-        importance_df = pd.DataFrame(importance)
+        importance_df = pd.DataFrame(importance_scores)
         importance_df = importance_df.sort_values('importance', ascending=False)
+        
+        # Normalize to sum to 1
+        total = importance_df['importance'].sum()
+        if total > 0:
+            importance_df['importance'] = importance_df['importance'] / total
 
         return importance_df
 
