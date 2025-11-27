@@ -295,7 +295,8 @@ def run_fraud_detection(args, config):
     reporter.generate_fraud_report(results, 'fraud_detection')
 
     n_flagged = flagged['is_flagged'].sum()
-    logger.info(f"Fraud detection complete. Flagged {n_flagged} transactions ({n_flagged/len(flagged)*100:.2f}%)")
+    flagged_pct = (n_flagged / len(flagged) * 100) if len(flagged) > 0 else 0.0
+    logger.info(f"Fraud detection complete. Flagged {n_flagged} transactions ({flagged_pct:.2f}%)")
     logger.info(f"Results saved to {args.output}")
 
     return results
