@@ -22,9 +22,6 @@ from sklearn.metrics import (
     average_precision_score
 )
 from loguru import logger
-import warnings
-
-warnings.filterwarnings('ignore')
 
 
 class FraudEvaluator:
