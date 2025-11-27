@@ -1,0 +1,134 @@
+# Enterprise Retail Analytics Suite - Configuration
+# Version: 1.0.0
+
+general:
+  project_name: "Retail Analytics Suite"
+  version: "1.0.0"
+  log_level: "INFO"
+  output_dir: "outputs"
+  random_seed: 42
+
+data:
+  date_formats:
+    - "%Y-%m-%d"
+    - "%Y-%m-%d %H:%M:%S"
+    - "%d/%m/%Y"
+    - "%m/%d/%Y"
+  missing_value_threshold: 0.3  # Max allowed missing ratio
+  outlier_zscore_threshold: 3.0
+  min_data_points: 30
+  
+  # Column name mappings for different data sources
+  column_names:
+    transaction_id: "transaction_id"
+    customer_id: "customer_id"
+    amount: "amount"
+    timestamp: "timestamp"
+    date: "date"
+    sales: "sales"
+
+sales_prediction:
+  # ARIMA Configuration
+  arima:
+    auto_order: true
+    max_p: 5
+    max_d: 2
+    max_q: 5
+    seasonal: true
+    seasonal_period: 12
+    information_criterion: "aic"
+
+  # Prophet Configuration
+  prophet:
+    growth: "linear"  # linear or logistic
+    seasonality_mode: "multiplicative"  # additive or multiplicative
+    yearly_seasonality: true
+    weekly_seasonality: true
+    daily_seasonality: false
+    changepoint_prior_scale: 0.05
+    seasonality_prior_scale: 10
+    holidays_prior_scale: 10
+    interval_width: 0.95
+
+  # General Forecasting
+  default_horizon: 30
+  confidence_interval: 0.95
+  cross_validation_folds: 5
+
+customer_segmentation:
+  # RFM Configuration
+  rfm:
+    recency_bins: 5
+    frequency_bins: 5
+    monetary_bins: 5
+
+  # K-Means Configuration
+  kmeans:
+    n_clusters_range: [2, 10]
+    init: "k-means++"
+    n_init: 10
+    max_iter: 300
+    random_state: 42
+
+  # Feature Engineering
+  scaling_method: "standard"  # standard, minmax, robust
+  dimensionality_reduction:
+    method: "pca"  # pca, tsne, umap
+    n_components: 2
+
+fraud_detection:
+  # Isolation Forest Configuration
+  isolation_forest:
+    n_estimators: 100
+    max_samples: "auto"
+    contamination: 0.01
+    max_features: 1.0
+    bootstrap: false
+    random_state: 42
+
+  # One-Class SVM (alternative)
+  ocsvm:
+    kernel: "rbf"
+    nu: 0.01
+    gamma: "scale"
+
+  # Local Outlier Factor
+  lof:
+    n_neighbors: 20
+    contamination: 0.01
+
+  # Thresholds
+  anomaly_score_threshold: -0.5
+  alert_threshold: 0.8
+
+  # Feature Engineering
+  time_windows:
+    - 1  # 1 hour
+    - 24  # 1 day
+    - 168  # 1 week
+
+visualization:
+  figure_size: [12, 8]
+  dpi: 100
+  style: "seaborn-v0_8-whitegrid"
+  color_palette: "husl"
+  save_format: "png"
+
+reporting:
+  formats:
+    - "csv"
+    - "json"
+    - "html"
+  include_visualizations: true
+  executive_summary: true
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  reload: false
+  # CORS origins - specify trusted domains only, use environment variable CORS_ORIGINS for production
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+    # Add production domains here or via CORS_ORIGINS environment variable
