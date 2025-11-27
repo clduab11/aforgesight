@@ -177,7 +177,9 @@ class KMeansSegmenter:
         if np.isnan(X).any():
             if self.imputer is None:
                 raise ValueError(
-                    "Model was fit without missing values; cannot handle NaN in predict()"
+                    "Cannot handle NaN values in predict(): model was fit on data without "
+                    "missing values. Either remove NaN values from input or refit the model "
+                    "on training data that includes NaN values."
                 )
             X = self.imputer.transform(X)
 
@@ -412,7 +414,9 @@ class KMeansSegmenter:
         if np.isnan(X).any():
             if self.imputer is None:
                 raise ValueError(
-                    "Model was fit without missing values; cannot handle NaN in reduce_dimensions()"
+                    "Cannot handle NaN values in reduce_dimensions(): model was fit on data "
+                    "without missing values. Either remove NaN values from input or refit "
+                    "the model on training data that includes NaN values."
                 )
             X = self.imputer.transform(X)
 
