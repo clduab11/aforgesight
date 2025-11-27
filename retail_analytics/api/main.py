@@ -14,20 +14,23 @@ Endpoints:
     GET /health - Health check
 """
 
-import sys
+import os
 from pathlib import Path
+import sys
+
+# Workaround for imports - ideally install package with: pip install -e .
+# This allows running without proper installation for development
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 import pandas as pd
-import numpy as np
 from io import StringIO
 from loguru import logger
 
-from src.common import DataLoader, Preprocessor
+from src.common import Preprocessor
 from src.sales_prediction import ProphetForecaster, ForecastEvaluator
 from src.customer_segmentation import RFMFeatureEngineer, KMeansSegmenter
 from src.fraud_detection import FraudFeatureEngineer, IsolationForestDetector
@@ -39,10 +42,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add CORS middleware
+# Add CORS middleware with environment-based configuration
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -132,9 +136,12 @@ async def generate_forecast(
             "model_info": forecaster.get_model_info()
         }
 
+    except ValueError as e:
+        logger.error(f"Forecast validation error: {e}")
+        raise HTTPException(status_code=400, detail="Invalid input data or parameters")
     except Exception as e:
-        logger.error(f"Forecast error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unexpected error during forecast")
+        raise HTTPException(status_code=500, detail="An error occurred while processing forecast")
 
 
 @app.post("/segment")
@@ -196,9 +203,12 @@ async def segment_customers(
             "recommendations": recommendations
         }
 
+    except ValueError as e:
+        logger.error(f"Segmentation validation error: {e}")
+        raise HTTPException(status_code=400, detail="Invalid input data or parameters")
     except Exception as e:
-        logger.error(f"Segmentation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unexpected error during segmentation")
+        raise HTTPException(status_code=500, detail="An error occurred while processing segmentation")
 
 
 @app.post("/detect-fraud")
@@ -257,19 +267,27 @@ async def detect_fraud(
             'transaction_id', 'amount', 'anomaly_score', 'fraud_probability', 'risk_level'
         ]].to_dict('records')
 
+        # Guard against division by zero
+        flagged_rate = 0.0
+        if len(flagged) > 0:
+            flagged_rate = round(len(flagged_txns) / len(flagged) * 100, 2)
+
         return {
             "status": "success",
             "total_transactions": len(flagged),
             "flagged_count": len(flagged_txns),
-            "flagged_rate": round(len(flagged_txns) / len(flagged) * 100, 2),
+            "flagged_rate": flagged_rate,
             "flagged_transactions": flagged_txns[:100],  # Limit to 100
             "threshold": detector.threshold,
             "recommendations": detector.get_recommendations(flagged)
         }
 
+    except ValueError as e:
+        logger.error(f"Fraud detection validation error: {e}")
+        raise HTTPException(status_code=400, detail="Invalid input data or parameters")
     except Exception as e:
-        logger.error(f"Fraud detection error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unexpected error during fraud detection")
+        raise HTTPException(status_code=500, detail="An error occurred while processing fraud detection")
 
 
 if __name__ == "__main__":

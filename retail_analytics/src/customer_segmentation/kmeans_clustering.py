@@ -245,7 +245,6 @@ class KMeansSegmenter:
     def _find_elbow(self, k_range: List[int], inertias: List[float]) -> int:
         """Find elbow point using the knee/elbow method."""
         # Calculate the angle at each point
-        n_points = len(k_range)
         all_coords = np.vstack([k_range, inertias]).T
 
         # Vector from first to last point
@@ -284,11 +283,9 @@ class KMeansSegmenter:
             raise ValueError("Model not fitted. Call fit() first.")
 
         if df is not None:
-            X = df[self.feature_columns].values
-            X_scaled = self.scaler.transform(X)
+            X_scaled = self.scaler.transform(df[self.feature_columns].values)
             labels = self.model.predict(X_scaled)
         else:
-            X = self.scaler.inverse_transform(self.model.cluster_centers_)
             X_scaled = self.model.cluster_centers_
             labels = self.labels_
 

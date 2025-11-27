@@ -17,6 +17,15 @@ data:
   missing_value_threshold: 0.3  # Max allowed missing ratio
   outlier_zscore_threshold: 3.0
   min_data_points: 30
+  
+  # Column name mappings for different data sources
+  column_names:
+    transaction_id: "transaction_id"
+    customer_id: "customer_id"
+    amount: "amount"
+    timestamp: "timestamp"
+    date: "date"
+    sales: "sales"
 
 sales_prediction:
   # ARIMA Configuration
@@ -118,5 +127,8 @@ api:
   port: 8000
   workers: 4
   reload: false
+  # CORS origins - specify trusted domains only, use environment variable CORS_ORIGINS for production
   cors_origins:
-    - "*"
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+    # Add production domains here or via CORS_ORIGINS environment variable

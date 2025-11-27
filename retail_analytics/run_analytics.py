@@ -24,7 +24,6 @@ Examples:
 
 import argparse
 import sys
-import os
 from pathlib import Path
 import yaml
 from loguru import logger
@@ -34,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from src.common import DataLoader, Preprocessor, Visualizer, Reporter
 from src.sales_prediction import ARIMAForecaster, ProphetForecaster, ForecastEvaluator
-from src.customer_segmentation import RFMFeatureEngineer, KMeansSegmenter, SegmentAnalyzer
+from src.customer_segmentation import RFMFeatureEngineer, KMeansSegmenter
 from src.fraud_detection import FraudFeatureEngineer, IsolationForestDetector, FraudEvaluator
 
 
@@ -211,9 +210,13 @@ def run_fraud_detection(args, config):
     """Run fraud detection pipeline."""
     logger.info("Starting Fraud Detection Pipeline")
 
+    # Get column names from config
+    col_names = config.get('data', {}).get('column_names', {})
+    timestamp_col = col_names.get('timestamp', 'timestamp')
+    
     # Load data
     loader = DataLoader()
-    df = loader.load_csv(args.data, date_columns=['timestamp'])
+    df = loader.load_csv(args.data, date_columns=[timestamp_col])
 
     # Preprocess
     preprocessor = Preprocessor()
@@ -223,7 +226,10 @@ def run_fraud_detection(args, config):
     feature_engineer = FraudFeatureEngineer()
     features = feature_engineer.engineer_features(
         df,
-        'transaction_id', 'customer_id', 'amount', 'timestamp'
+        col_names.get('transaction_id', 'transaction_id'),
+        col_names.get('customer_id', 'customer_id'),
+        col_names.get('amount', 'amount'),
+        timestamp_col
     )
 
     # Select feature columns (exclude IDs and labels)

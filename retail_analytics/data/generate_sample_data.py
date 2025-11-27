@@ -16,7 +16,7 @@ This will create:
 
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import timedelta
 import os
 
 # Set random seed for reproducibility

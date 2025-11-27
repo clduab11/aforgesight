@@ -14,8 +14,7 @@ Usage:
 
 import pandas as pd
 import numpy as np
-from typing import Optional, List, Dict, Any
-from datetime import datetime
+from typing import Optional, List
 from loguru import logger
 import warnings
 
@@ -271,23 +270,24 @@ class FraudFeatureEngineer:
             (df.groupby(customer_id)[amount_column].shift(1) + 1)
         ).fillna(0)
 
-        # Transaction velocity (rolling count)
+        # Transaction velocity (rolling count) - using vectorized operations
+        # Sort by customer and timestamp for rolling operations
+        df = df.sort_values([customer_id, timestamp_column])
+        
         for window in self.velocity_windows:
             # Count transactions in window
-            df[f'txn_count_{window}h'] = df.groupby(customer_id).apply(
-                lambda x: x.set_index(timestamp_column)
-                .rolling(f'{window}H')[amount_column]
-                .count()
-                .values
-            ).explode().values
+            df[f'txn_count_{window}h'] = (
+                df.groupby(customer_id, group_keys=False)
+                .apply(lambda x: x.set_index(timestamp_column)[amount_column]
+                       .rolling(f'{window}H').count())
+            ).reset_index(level=0, drop=True)
 
             # Sum amount in window
-            df[f'amount_sum_{window}h'] = df.groupby(customer_id).apply(
-                lambda x: x.set_index(timestamp_column)
-                .rolling(f'{window}H')[amount_column]
-                .sum()
-                .values
-            ).explode().values
+            df[f'amount_sum_{window}h'] = (
+                df.groupby(customer_id, group_keys=False)
+                .apply(lambda x: x.set_index(timestamp_column)[amount_column]
+                       .rolling(f'{window}H').sum())
+            ).reset_index(level=0, drop=True)
 
         # Rapid succession indicator
         df['rapid_succession'] = (df['hours_since_last'] < 0.5).astype(int)

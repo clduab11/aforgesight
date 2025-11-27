@@ -15,7 +15,7 @@ Usage:
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, Any, Optional
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from scipy import stats
 from loguru import logger
@@ -102,10 +102,15 @@ class ForecastEvaluator:
             # Theil's U Statistic
             metrics['theils_u'] = self._calculate_theils_u(actual, predicted)
 
-            # Coverage (within +/- 10%)
+            # Coverage (within +/- 10%) - guard against division by zero
             tolerance = 0.1
-            within_tolerance = np.abs((actual - predicted) / actual) <= tolerance
-            metrics['coverage_10pct'] = np.mean(within_tolerance) * 100
+            # Only calculate for non-zero actual values
+            non_zero_mask = actual != 0
+            if np.any(non_zero_mask):
+                within_tolerance = np.abs((actual[non_zero_mask] - predicted[non_zero_mask]) / actual[non_zero_mask]) <= tolerance
+                metrics['coverage_10pct'] = np.mean(within_tolerance) * 100
+            else:
+                metrics['coverage_10pct'] = 0.0
 
         return metrics
 
@@ -192,7 +197,8 @@ class ForecastEvaluator:
         # Interval width
         interval_width = upper - lower
         mean_width = np.mean(interval_width)
-        relative_width = np.mean(interval_width / actual)
+        # Guard against division by zero
+        relative_width = np.mean(interval_width / np.where(actual != 0, actual, 1))
 
         # Winkler Score (lower is better)
         alpha = 1 - target_coverage
@@ -437,16 +443,24 @@ class ForecastEvaluator:
         model_metrics = self.calculate_metrics(actual, model_pred, include_advanced=False)
         naive_metrics = self.calculate_metrics(actual, naive_pred, include_advanced=False)
 
-        # Calculate FVA
+        # Calculate FVA - guard against division by zero
+        fva_mape_pct = 0.0
+        if naive_metrics['mape'] != 0:
+            fva_mape_pct = ((naive_metrics['mape'] - model_metrics['mape']) / naive_metrics['mape']) * 100
+        
+        fva_rmse_pct = 0.0
+        if naive_metrics['rmse'] != 0:
+            fva_rmse_pct = ((naive_metrics['rmse'] - model_metrics['rmse']) / naive_metrics['rmse']) * 100
+        
         fva = {
             'model_mape': model_metrics['mape'],
             'naive_mape': naive_metrics['mape'],
             'fva_mape': naive_metrics['mape'] - model_metrics['mape'],
-            'fva_mape_pct': ((naive_metrics['mape'] - model_metrics['mape']) / naive_metrics['mape']) * 100,
+            'fva_mape_pct': fva_mape_pct,
             'model_rmse': model_metrics['rmse'],
             'naive_rmse': naive_metrics['rmse'],
             'fva_rmse': naive_metrics['rmse'] - model_metrics['rmse'],
-            'fva_rmse_pct': ((naive_metrics['rmse'] - model_metrics['rmse']) / naive_metrics['rmse']) * 100
+            'fva_rmse_pct': fva_rmse_pct
         }
 
         return fva

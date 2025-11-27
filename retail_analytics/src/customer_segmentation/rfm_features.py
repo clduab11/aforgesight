@@ -15,7 +15,7 @@ Usage:
 
 import pandas as pd
 import numpy as np
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from datetime import datetime
 from loguru import logger
 import warnings
@@ -204,12 +204,12 @@ class RFMFeatureEngineer:
             # About to Sleep
             elif r >= 2:
                 return 'About to Sleep'
+            # Cannot Lose Them - check before At Risk (more specific condition)
+            elif r <= 2 and f >= 4 and m >= 4:
+                return 'Cannot Lose'
             # At Risk
             elif r <= 2 and f >= 3:
                 return 'At Risk'
-            # Cannot Lose Them
-            elif r <= 2 and f >= 4 and m >= 4:
-                return 'Cannot Lose'
             # Hibernating
             elif r <= 2 and f <= 2:
                 return 'Hibernating'
