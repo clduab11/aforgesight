@@ -126,7 +126,7 @@ def generate_customer_data(
     """
     start = pd.Timestamp(start_date)
     end = pd.Timestamp(end_date)
-    date_range = (end - start).days
+    date_range = max(1, (end - start).days)  # Ensure at least 1 day range
 
     # Customer profiles
     customer_profiles = {}
@@ -201,7 +201,7 @@ def generate_transaction_data(
     """
     start = pd.Timestamp(start_date)
     end = pd.Timestamp(end_date)
-    date_range = (end - start).days
+    date_range = max(1, (end - start).days)  # Ensure at least 1 day range
 
     n_fraud = int(n_transactions * fraud_rate)
     n_normal = n_transactions - n_fraud
