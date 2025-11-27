@@ -332,12 +332,18 @@ class DataLoader:
         Returns:
             Dictionary with summary statistics
         """
+        n_rows = len(df)
+        if n_rows == 0:
+            missing_percentage = {col: 0.0 for col in df.columns}
+        else:
+            missing_percentage = (df.isna().sum() / n_rows * 100).to_dict()
+
         summary = {
             'shape': df.shape,
             'columns': list(df.columns),
             'dtypes': df.dtypes.astype(str).to_dict(),
             'missing_values': df.isna().sum().to_dict(),
-            'missing_percentage': (df.isna().sum() / len(df) * 100).to_dict(),
+            'missing_percentage': missing_percentage,
             'memory_usage_mb': df.memory_usage(deep=True).sum() / 1024**2,
             'numeric_summary': {},
             'categorical_summary': {}
