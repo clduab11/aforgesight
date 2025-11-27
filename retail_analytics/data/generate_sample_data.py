@@ -148,10 +148,7 @@ def generate_customer_data(
         for c in customer_ids
     ])
 
-    # Validate weights and normalize (handle zero/NaN with uniform fallback)
-    if np.any(np.isnan(weights)) or np.all(weights == 0):
-        # Fallback to uniform distribution if weights are invalid
-        weights = np.ones(len(customer_ids))
+    # Normalize weights for probability distribution
     weights = weights / weights.sum()
 
     for _ in range(n_transactions):
