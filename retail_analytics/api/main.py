@@ -43,7 +43,12 @@ app = FastAPI(
 )
 
 # Add CORS middleware with environment-based configuration
-cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080").split(",")
+cors_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080").split(",")]
+
+# Validate that wildcard CORS origin is not allowed in production
+if "*" in cors_origins and os.getenv("ENVIRONMENT") == "production":
+    raise ValueError("Wildcard CORS origin '*' is not allowed in production")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
