@@ -251,12 +251,15 @@ class DataLoader:
 
         # Check missing values
         missing_threshold = self.config.get('data', {}).get('missing_value_threshold', 0.3)
-        for col in df.columns:
-            missing_ratio = df[col].isna().sum() / len(df)
-            if missing_ratio > missing_threshold:
-                report['warnings'].append(
-                    f"High missing ratio in '{col}': {missing_ratio:.2%}"
-                )
+        if len(df) == 0:
+            report['warnings'].append("DataFrame is empty; skipping missing value ratio checks")
+        else:
+            for col in df.columns:
+                missing_ratio = df[col].isna().sum() / len(df)
+                if missing_ratio > missing_threshold:
+                    report['warnings'].append(
+                        f"High missing ratio in '{col}': {missing_ratio:.2%}"
+                    )
 
         # Generate statistics
         report['statistics'] = {
