@@ -81,6 +81,7 @@ class KMeansSegmenter:
 
         self.model = None
         self.scaler = None
+        self.imputer = None
         self.feature_columns = None
         self.cluster_centers_ = None
         self.labels_ = None
@@ -121,8 +122,8 @@ class KMeansSegmenter:
         # Handle missing values
         if np.isnan(X).any():
             from sklearn.impute import SimpleImputer
-            imputer = SimpleImputer(strategy='median')
-            X = imputer.fit_transform(X)
+            self.imputer = SimpleImputer(strategy='median')
+            X = self.imputer.fit_transform(X)
 
         # Scale features
         self.scaler = self._get_scaler()
@@ -172,11 +173,13 @@ class KMeansSegmenter:
 
         X = df[self.feature_columns].values
 
-        # Handle missing values
+        # Handle missing values using stored imputer from fit()
         if np.isnan(X).any():
-            from sklearn.impute import SimpleImputer
-            imputer = SimpleImputer(strategy='median')
-            X = imputer.fit_transform(X)
+            if self.imputer is None:
+                raise ValueError(
+                    "Model was fit without missing values; cannot handle NaN in predict()"
+                )
+            X = self.imputer.transform(X)
 
         X_scaled = self.scaler.transform(X)
         return self.model.predict(X_scaled)
@@ -405,11 +408,13 @@ class KMeansSegmenter:
         """
         X = df[self.feature_columns].values
 
-        # Handle missing values
+        # Handle missing values using stored imputer from fit()
         if np.isnan(X).any():
-            from sklearn.impute import SimpleImputer
-            imputer = SimpleImputer(strategy='median')
-            X = imputer.fit_transform(X)
+            if self.imputer is None:
+                raise ValueError(
+                    "Model was fit without missing values; cannot handle NaN in reduce_dimensions()"
+                )
+            X = self.imputer.transform(X)
 
         X_scaled = self.scaler.transform(X)
 
