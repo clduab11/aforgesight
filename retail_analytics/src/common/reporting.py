@@ -555,6 +555,39 @@ class Reporter:
         segmentation_results = all_results.get('segmentation', {})
         fraud_results = all_results.get('fraud', {})
 
+        # Precompute safe display variables for KPIs
+        mape = forecast_results.get('metrics', {}).get('mape')
+        mape_display = f"{mape:.1f}%" if isinstance(mape, (int, float)) else "N/A"
+        mape_detailed = f"{mape:.2f}%" if isinstance(mape, (int, float)) else "N/A"
+        
+        cluster_profiles = segmentation_results.get('cluster_profiles', {})
+        cluster_count_display = str(len(cluster_profiles)) if cluster_profiles else "0"
+        
+        flagged_transactions = fraud_results.get('flagged_transactions', [])
+        flagged_tx_display = str(len(flagged_transactions)) if flagged_transactions else "0"
+        
+        auc = fraud_results.get('metrics', {}).get('auc_roc')
+        auc_display = f"{auc:.2f}" if isinstance(auc, (int, float)) else "N/A"
+        
+        silhouette = segmentation_results.get('metrics', {}).get('silhouette_score')
+        silhouette_display = f"{silhouette:.3f}" if isinstance(silhouette, (int, float)) else "N/A"
+        
+        precision = fraud_results.get('metrics', {}).get('precision')
+        precision_display = f"{precision:.1%}" if isinstance(precision, (int, float)) else "N/A"
+        
+        model_type = forecast_results.get('model_info', {}).get('type', 'forecasting')
+        
+        # Determine forecast accuracy description
+        if isinstance(mape, (int, float)):
+            if mape < 10:
+                accuracy_desc = "high"
+            elif mape < 20:
+                accuracy_desc = "moderate"
+            else:
+                accuracy_desc = "room for improvement in"
+        else:
+            accuracy_desc = "undetermined"
+
         return f"""
 <!DOCTYPE html>
 <html>
@@ -592,19 +625,19 @@ class Reporter:
             <h2>Key Performance Indicators</h2>
             <div class="kpi-grid">
                 <div class="kpi-card blue">
-                    <div class="kpi-value">{forecast_results.get('metrics', {}).get('mape', 'N/A'):.1f}%</div>
+                    <div class="kpi-value">{mape_display}</div>
                     <div class="kpi-label">Forecast Accuracy (MAPE)</div>
                 </div>
                 <div class="kpi-card green">
-                    <div class="kpi-value">{len(segmentation_results.get('cluster_profiles', {}))}</div>
+                    <div class="kpi-value">{cluster_count_display}</div>
                     <div class="kpi-label">Customer Segments</div>
                 </div>
                 <div class="kpi-card red">
-                    <div class="kpi-value">{len(fraud_results.get('flagged_transactions', []))}</div>
+                    <div class="kpi-value">{flagged_tx_display}</div>
                     <div class="kpi-label">Flagged Transactions</div>
                 </div>
                 <div class="kpi-card purple">
-                    <div class="kpi-value">{fraud_results.get('metrics', {}).get('auc_roc', 'N/A'):.2f}</div>
+                    <div class="kpi-value">{auc_display}</div>
                     <div class="kpi-label">Fraud Detection AUC</div>
                 </div>
             </div>
@@ -612,22 +645,22 @@ class Reporter:
             <h2>Sales Forecast Insights</h2>
             <div class="insight-box">
                 <h3>Forecast Performance</h3>
-                <p>The {forecast_results.get('model_info', {}).get('type', 'forecasting')} model achieved a MAPE of {forecast_results.get('metrics', {}).get('mape', 'N/A'):.2f}%,
-                indicating {'high' if forecast_results.get('metrics', {}).get('mape', 100) < 10 else 'moderate' if forecast_results.get('metrics', {}).get('mape', 100) < 20 else 'room for improvement in'} prediction accuracy.</p>
+                <p>The {model_type} model achieved a MAPE of {mape_detailed},
+                indicating {accuracy_desc} prediction accuracy.</p>
                 <p><strong>Recommendation:</strong> Use forecasts for inventory planning and staffing optimization.</p>
             </div>
 
             <h2>Customer Segmentation Insights</h2>
             <div class="insight-box">
                 <h3>Segment Analysis</h3>
-                <p>Identified {len(segmentation_results.get('cluster_profiles', {}))} distinct customer segments with silhouette score of {segmentation_results.get('metrics', {}).get('silhouette_score', 'N/A'):.3f}.</p>
+                <p>Identified {cluster_count_display} distinct customer segments with silhouette score of {silhouette_display}.</p>
                 <p><strong>Recommendation:</strong> Develop targeted campaigns for each segment to maximize ROI.</p>
             </div>
 
             <h2>Fraud Detection Insights</h2>
             <div class="insight-box">
                 <h3>Anomaly Detection</h3>
-                <p>Detected {len(fraud_results.get('flagged_transactions', []))} potentially fraudulent transactions with precision of {fraud_results.get('metrics', {}).get('precision', 'N/A'):.1%}.</p>
+                <p>Detected {flagged_tx_display} potentially fraudulent transactions with precision of {precision_display}.</p>
                 <p><strong>Recommendation:</strong> Review flagged transactions and implement automated blocking rules.</p>
             </div>
 
