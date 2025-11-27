@@ -140,9 +140,20 @@ def generate_customer_data(
     records = []
     transaction_id = 1
 
+    # Build weights based on frequency for weighted customer selection
+    freq_weights = {'high': 3.0, 'medium': 2.0, 'low': 1.0}
+    customer_ids = list(customer_profiles.keys())
+    weights = np.array([
+        freq_weights.get(customer_profiles[c]['frequency'], 1.0)
+        for c in customer_ids
+    ])
+
+    # Normalize weights for probability distribution
+    weights = weights / weights.sum()
+
     for _ in range(n_transactions):
         # Select customer (weighted by frequency)
-        customer_id = np.random.randint(1, n_customers + 1)
+        customer_id = np.random.choice(customer_ids, p=weights)
         profile = customer_profiles[customer_id]
 
         # Generate transaction date
