@@ -16,7 +16,7 @@ Usage:
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 import json
 from loguru import logger
@@ -49,7 +49,7 @@ class Reporter:
         self,
         results: Dict[str, Any],
         report_name: str,
-        formats: List[str] = ['csv', 'json', 'html']
+        formats: Optional[List[str]] = None
     ) -> Dict[str, Path]:
         """
         Generate comprehensive forecast report.
@@ -73,6 +73,8 @@ class Reporter:
             ... }
             >>> paths = reporter.generate_forecast_report(results, "Q4_forecast")
         """
+        if formats is None:
+            formats = ['csv', 'json', 'html']
         output_paths = {}
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -124,7 +126,7 @@ class Reporter:
         self,
         results: Dict[str, Any],
         report_name: str,
-        formats: List[str] = ['csv', 'json', 'html']
+        formats: Optional[List[str]] = None
     ) -> Dict[str, Path]:
         """
         Generate customer segmentation report.
@@ -141,6 +143,8 @@ class Reporter:
         Returns:
             Dictionary of format -> file path
         """
+        if formats is None:
+            formats = ['csv', 'json', 'html']
         output_paths = {}
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -189,7 +193,7 @@ class Reporter:
         self,
         results: Dict[str, Any],
         report_name: str,
-        formats: List[str] = ['csv', 'json', 'html']
+        formats: Optional[List[str]] = None
     ) -> Dict[str, Path]:
         """
         Generate fraud detection report.
@@ -206,6 +210,8 @@ class Reporter:
         Returns:
             Dictionary of format -> file path
         """
+        if formats is None:
+            formats = ['csv', 'json', 'html']
         output_paths = {}
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
